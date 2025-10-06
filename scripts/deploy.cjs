@@ -1,4 +1,3 @@
-// scripts/deploy.js
 const { ethers } = require("hardhat");
 
 async function main() {
@@ -6,8 +5,8 @@ async function main() {
   const TeamFinalizeRegistry = await ethers.getContractFactory("TeamFinalizeRegistry");
 
   // Deploy contract
-  const contract = await TeamFinalizeRegistry.deploy(); // Ethers v6 returns deployed contract
-  console.log("Contract deployed to:", contract.address); // .target is the deployed address in v6
+  const contract = await TeamFinalizeRegistry.deploy();
+  console.log("Contract deployed to:", contract.target);
 }
 
 main().catch((error) => {
