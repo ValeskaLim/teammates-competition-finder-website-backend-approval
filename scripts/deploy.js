@@ -1,14 +1,16 @@
-const hre = require("hardhat");
+// scripts/deploy.js
+const { ethers } = require("hardhat");
 
 async function main() {
-  const TeamApproval = await hre.ethers.getContractFactory("TeamApproval");
-  const teamApproval = await TeamApproval.deploy();
-  await teamApproval.waitForDeployment();
+  // Compile & get contract factory
+  const TeamFinalizeRegistry = await ethers.getContractFactory("TeamFinalizeRegistry");
 
-  console.log("✅ TeamApproval deployed to:", await teamApproval.getAddress());
+  // Deploy contract
+  const contract = await TeamFinalizeRegistry.deploy(); // Ethers v6 returns deployed contract
+  console.log("Contract deployed to:", contract.address); // .target is the deployed address in v6
 }
 
 main().catch((error) => {
   console.error(error);
-  process.exitCode = 1;
+  process.exit(1);
 });
