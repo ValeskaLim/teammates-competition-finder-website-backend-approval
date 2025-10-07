@@ -1,12 +1,18 @@
 import express from "express";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import contractJSON from "./artifacts/contracts/FinalizeTeam.sol/TeamFinalizeRegistry.json" assert { type: "json" };
 const app = express();
 
 dotenv.config();
 
 app.use(express.json());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Connect to local Hardhat network
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL_LOCALHOST);
@@ -22,7 +28,7 @@ const contract = new ethers.Contract(contractAddress, contractJSON.abi, wallet);
 
 // Example
 app.get("/", (req, res) => {
-  res.send("✅ TeamFinalizeRegistry API is running!");
+  res.send("TeamFinalizeRegistry API is running!");
 });
 
 app.post("/finalize", async (req, res) => {
@@ -33,16 +39,40 @@ app.post("/finalize", async (req, res) => {
     }
 
     const tx = await contract.finalizeTeam(teamId);
-    await tx.wait();
+    const receipt = await tx.wait();
+
+    const uploadsDir = path.join(__dirname, "uploads", "finalizations");
+    fs.mkdirSync(uploadsDir, { recursive: true });
+
+    const filename = `team_${teamId}_${Date.now()}.txt`;
+    const filepath = path.join(uploadsDir, filename);
+    const fileContent = [
+      `Team Finalization Result`,
+      `------------------------`,
+      `Team ID: ${teamId}`,
+      `Tx Hash: ${tx.hash}`,
+      `From: ${receipt.from}`,
+      `To: ${receipt.to}`,
+      `Block Number: ${receipt.blockNumber}`,
+      `Gas Used: ${receipt.gasUsed.toString()}`,
+      `Timestamp: ${new Date().toLocaleString("id-ID", { timeZone: 'Asia/Jakarta' })}`,
+    ].join("\n");
+
+    fs.writeFileSync(filepath, fileContent, "utf8");
+
+    console.log(`Saved transaction result: ${filepath}`);
 
     res.json({
       message: "Team finalized successfully",
       teamId,
       txHash: tx.hash,
     });
+
   } catch (err) {
     console.error("Error finalizing team:", err);
-    res.status(500).json({ error: err.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 

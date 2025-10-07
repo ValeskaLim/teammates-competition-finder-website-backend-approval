@@ -10,4 +10,9 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["node", "server.js"]
+CMD sh -c "echo 'Waiting for Hardhat node...' && \
+sleep 60 && \
+echo 'Deploying contract...' && \
+npx hardhat run scripts/deploy.cjs --network localhost && \
+echo 'Starting backend API...' && \
+node server.js"

@@ -10,7 +10,7 @@ module.exports = {
     //   accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     // },
     localhost: {  
-      url: process.env.RPC_URL_LOCALHOST,
+      url: process.env.RPC_URL_LOCALHOST || "http://127.0.0.1:8545",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     }
   }
