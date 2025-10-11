@@ -20,7 +20,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - RPC_URL_LOCALHOST=http://hardhat-node:8545
+      - RPC_URL_LOCALHOST=${RPC_URL_LOCALHOST}
       - PRIVATE_KEY=${PRIVATE_KEY}
       - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
       - PORT=5000

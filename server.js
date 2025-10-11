@@ -3,9 +3,14 @@ import dotenv from "dotenv";
 import { ethers } from "ethers";
 import path from "path";
 import fs from "fs";
+import cors from "cors";
 import { fileURLToPath } from "url";
 import contractJSON from "./artifacts/contracts/FinalizeTeam.sol/TeamFinalizeRegistry.json" assert { type: "json" };
 const app = express();
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 dotenv.config();
 
@@ -55,7 +60,9 @@ app.post("/finalize", async (req, res) => {
       `To: ${receipt.to}`,
       `Block Number: ${receipt.blockNumber}`,
       `Gas Used: ${receipt.gasUsed.toString()}`,
-      `Timestamp: ${new Date().toLocaleString("id-ID", { timeZone: 'Asia/Jakarta' })}`,
+      `Timestamp: ${new Date().toLocaleString("id-ID", {
+        timeZone: "Asia/Jakarta",
+      })}`,
     ].join("\n");
 
     fs.writeFileSync(filepath, fileContent, "utf8");
@@ -66,13 +73,32 @@ app.post("/finalize", async (req, res) => {
       message: "Team finalized successfully",
       teamId,
       txHash: tx.hash,
+      blockNumber: receipt.blockNumber,
+      status: "CONFIRMED",
+      fileName: filename,
     });
-
   } catch (err) {
     console.error("Error finalizing team:", err);
     if (!res.headersSent) {
       res.status(500).json({ error: err.message });
     }
+  }
+});
+
+app.get("/uploads/finalizations/:filename", (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, "uploads", "finalizations", filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send("File not found");
+    }
+
+    const content = fs.readFileSync(filePath, "utf8");
+    res.type("text/plain").send(content);
+  } catch (err) {
+    console.error("Error reading finalization file:", err);
+    res.status(500).send("Error reading file");
   }
 });
 
@@ -95,4 +121,6 @@ app.get("/finalization/:teamId", async (req, res) => {
 
 // start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
